@@ -15,14 +15,14 @@ import (
 )
 
 type VirtualFile struct {
-	name  string
-	size  int64
-	isDir bool
+	FileName  string
+	FileSize  int64
+	FileIsDir bool
 	*bytes.Reader
 }
 
 func (f VirtualFile) Readdir(count int) ([]os.FileInfo, error) {
-	if f.isDir {
+	if f.FileIsDir {
 		return []os.FileInfo{}, nil
 	}
 	return nil, fmt.Errorf("cannot Readdir from a file")
@@ -33,7 +33,7 @@ func (f VirtualFile) Stat() (os.FileInfo, error) {
 }
 
 func (f VirtualFile) IsDir() bool {
-	return f.isDir
+	return f.FileIsDir
 }
 
 func (f VirtualFile) ModTime() time.Time {
@@ -41,14 +41,14 @@ func (f VirtualFile) ModTime() time.Time {
 }
 
 func (f VirtualFile) Mode() os.FileMode {
-	if f.isDir {
+	if f.FileIsDir {
 		return 0555
 	}
 	return 0444
 }
 
 func (f VirtualFile) Size() int64 {
-	return f.size
+	return f.FileSize
 }
 
 func (f VirtualFile) Close() error {
@@ -56,7 +56,7 @@ func (f VirtualFile) Close() error {
 }
 
 func (f VirtualFile) Name() string {
-	return f.name
+	return f.FileName
 }
 
 func (f VirtualFile) Sys() interface{} {
