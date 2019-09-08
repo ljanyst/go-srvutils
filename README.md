@@ -106,3 +106,19 @@ You can then use it with `go generate`:
 ```go
 //go:generate go run --tags=dev assets_generate.go
 ```
+
+auth
+----
+
+The go http package seems to lack a simple HTTP BasicAuth handler that would
+authenticate users using a user-password map read from a htpasswd file.
+
+
+```go
+passwords, err := htpasswd.ParseHtpasswdFile(authFile)
+if err != nil {
+	log.Fatalf(`Authentication enabled but cannot open htpassword file "%s": %s`,	authFile, err)
+}
+
+http.Handle("/", auth.NewBasicAuthHandler("realm", passwords, s3Fs))
+```
