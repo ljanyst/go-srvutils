@@ -67,6 +67,18 @@ var Assets http.FileSystem = fs.NewFilteredFileSystem(
 )
 ```
 
+The package also comes with the `VirtualFile` class that implements the
+`http.File` interface. It lets you easily serve memory blobs.
+
+```go
+fs.VirtualFile{
+        filepath.Base(path),
+        int64(len(data)),
+        false,
+        bytes.NewReader(data),
+}
+```
+
 gen
 ---
 
@@ -121,4 +133,60 @@ if err != nil {
 }
 
 http.Handle("/", auth.NewBasicAuthHandler("realm", passwords, s3Fs))
+```
+
+websocket
+---------
+
+Websocket is a library for receiving, processing in a synchronized manner,
+responding, unicasting, and broadcasting message over webosckets. It unmarshals
+JSON strings into predefined objects based on action types.
+
+```go
+import (
+	ws "github.com/ljanyst/go-srvutils/websocket"
+)
+
+type BrowserGetRequest struct {
+	ws.RequestHeader
+	Path string
+}
+
+type SocketHandler struct {
+	compiler *Compiler
+}
+
+func (h *SocketHandler) ProcessRequest(req ws.Request) []ws.Response {
+	switch req.Action() {
+	case "BROWSER_GET":
+		r := req.(*BrowserGetRequest)
+		listing, err := h.compiler.GetContent(r.Path, HTML_RENDERER)
+		if err != nil {
+			return []ws.Response{
+				ws.Response{ws.STATUS, ws.ERROR, err.Error(), r.Id()},
+			}
+		}
+		return []ws.Response{
+			ws.Response{ws.STATUS, ws.OK, listing, r.Id()},
+		}
+	}
+	return []ws.Response{}
+}
+
+func (h *SocketHandler) NewClient() []ws.Response {
+	return []ws.Response{}
+}
+```
+
+```go
+wsHandler := SocketHandler{compiler}
+requestMap := map[string]reflect.Type{}
+requestMap["BROWSER_GET"] = reflect.TypeOf(&BrowserGetRequest{})
+
+ws, err := ws.NewWebSocketHandler(&wsHandler, requestMap)
+if err != nil {
+	log.Fatalf("Can't create a web socket handler: %s", err)
+}
+
+http.Handle("/ws", ws)
 ```
