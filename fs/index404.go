@@ -12,13 +12,13 @@ import (
 )
 
 type Index404Fs struct {
-	fs http.FileSystem
+	Fs http.FileSystem
 }
 
 func (fs *Index404Fs) Open(name string) (http.File, error) {
-	file, err := fs.fs.Open(name)
+	file, err := fs.Fs.Open(name)
 	if err != nil {
-		return fs.fs.Open("/index.html")
+		return fs.Fs.Open("/index.html")
 	}
 	return file, err
 }
