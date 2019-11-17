@@ -14,20 +14,21 @@ import (
 )
 
 const (
-	addClient    = 0
-	removeClient = 1
+	addClient     = 0
+	removeClient  = 1
+	injectRequest = 2
 )
 
-type ctrl struct {
-	Action       uint
-	Id           uint64
-	ResponseChan chan<- Response
-	Sync         chan bool
+type requestWrapper struct {
+	clientId uint64
+	request  Request
 }
 
-type requestWrapper struct {
-	ClientId uint64
-	Request  Request
+type ctrl struct {
+	action       uint
+	id           uint64
+	responseChan chan<- Response
+	sync         chan bool
 }
 
 type controller struct {
@@ -65,13 +66,13 @@ func (c *controller) sendMessages(clientId uint64, reqId string, msgs []Response
 	channel, ok := c.broadcastMap[clientId]
 
 	for _, msg := range msgs {
-		if msg.Status == BROADCAST {
+		if msg.Type == BROADCAST {
 			for _, channel := range c.broadcastMap {
 				channel <- msg
 			}
 		} else {
 			if ok {
-				if msg.Status == STATUS {
+				if msg.Type == STATUS {
 					msg.Id = reqId
 				}
 				channel <- msg
@@ -86,21 +87,25 @@ func (c *controller) handleRequests() {
 	for {
 		select {
 		case req := <-c.requestChan:
-			msgs := c.handler.ProcessRequest(req.Request)
-			c.sendMessages(req.ClientId, req.Request.Id(), msgs)
+			msgs := c.handler.ProcessRequest(req.request)
+			c.sendMessages(req.clientId, req.request.Id(), msgs)
 		case ctrl := <-c.controlChan:
-			switch ctrl.Action {
+			switch ctrl.action {
 			case addClient:
-				c.broadcastMap[ctrl.Id] = ctrl.ResponseChan
-				ctrl.Sync <- true
+				c.broadcastMap[ctrl.id] = ctrl.responseChan
+				ctrl.sync <- true
 				msgs := c.handler.NewClient()
 				c.sendMessages(0, "", msgs)
 			case removeClient:
-				delete(c.broadcastMap, ctrl.Id)
-				ctrl.Sync <- true
+				delete(c.broadcastMap, ctrl.id)
+				ctrl.sync <- true
 			}
 		}
 	}
+}
+
+func (c controller) injectRequest(req Request) {
+	c.requestChan <- requestWrapper{0, req}
 }
 
 func newController(handler RequestHandler) *controller {

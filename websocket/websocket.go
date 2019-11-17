@@ -161,6 +161,10 @@ func (handler WebSocketHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 	writeMessages(conn, l)
 }
 
+func (handler WebSocketHandler) InjectRequest(req Request) {
+	handler.ctrl.injectRequest(req)
+}
+
 func NewWebSocketHandler(
 	handler RequestHandler,
 	requestMap map[string]reflect.Type) (WebSocketHandler, error) {

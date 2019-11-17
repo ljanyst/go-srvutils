@@ -16,7 +16,8 @@ type Request interface {
 type RequestType string
 
 const (
-	ACTION RequestType = "ACTION"
+	ACTION       RequestType = "ACTION"
+	NOTIFICATION             = "NOTIFICATION"
 )
 
 type RequestHeader struct {
@@ -45,21 +46,20 @@ type GenericRequest struct {
 type ResponseType string
 
 const (
-	UNICAST   ResponseType = "UNICAST"
-	BROADCAST              = "BROADCAST"
+	BROADCAST ResponseType = "BROADCAST"
 	STATUS                 = "STATUS"
 )
 
-type ResponseStatus string
+type ResponseSubType string
 
 const (
-	OK    ResponseStatus = "OK"
-	ERROR                = "ERROR"
+	SUCCESS ResponseSubType = "SUCCESS"
+	ERROR                   = "ERROR"
 )
 
 type Response struct {
-	Type    ResponseType   `json:"type"`
-	Status  ResponseStatus `json:"status"`
-	Payload interface{}    `json:"payload"`
-	Id      string         `json:"id"`
+	Type    ResponseType    `json:"type"`
+	SubType ResponseSubType `json:"subtype"`
+	Payload interface{}     `json:"payload"`
+	Id      string          `json:"id"`
 }
