@@ -190,3 +190,10 @@ if err != nil {
 
 http.Handle("/ws", ws)
 ```
+
+shortuuidgen
+------------
+
+`shortuuidgen` generates concise UUIDs using the [`shortuuid`][suuid] library.
+
+[suuid]: https://github.com/lithammer/shortuuid
