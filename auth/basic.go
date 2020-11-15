@@ -9,7 +9,9 @@ package auth
 
 import (
 	"fmt"
+	"math/rand"
 	"net/http"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -18,6 +20,7 @@ type BasicAuthHandler struct {
 	userMap        map[string]string
 	realm          string
 	wrappedHandler http.Handler
+	rnd            *rand.Rand
 }
 
 func (handler BasicAuthHandler) writeUnauthorized(w http.ResponseWriter) {
@@ -27,24 +30,28 @@ func (handler BasicAuthHandler) writeUnauthorized(w http.ResponseWriter) {
 }
 
 func (handler BasicAuthHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	sleepTime := handler.rnd.Intn(500000)
+
 	user, pass, ok := r.BasicAuth()
 	if !ok {
+		time.Sleep(time.Duration(sleepTime) * time.Microsecond)
 		handler.writeUnauthorized(w)
 		return
 	}
 
 	knownPass, ok := handler.userMap[user]
 	if !ok {
+		time.Sleep(time.Duration(sleepTime) * time.Microsecond)
 		handler.writeUnauthorized(w)
 		return
 	}
 
 	err := bcrypt.CompareHashAndPassword([]byte(knownPass), []byte(pass))
 	if err != nil {
+		time.Sleep(time.Duration(sleepTime) * time.Microsecond)
 		handler.writeUnauthorized(w)
 		return
 	}
-
 	handler.wrappedHandler.ServeHTTP(w, r)
 }
 
@@ -53,5 +60,6 @@ func NewBasicAuthHandler(realm string, userMap map[string]string, handler http.H
 	h.realm = realm
 	h.wrappedHandler = handler
 	h.userMap = userMap
+	h.rnd = rand.New(rand.NewSource(99))
 	return h
 }
