@@ -12,6 +12,7 @@ import (
 	"math/rand"
 	"net"
 	"net/http"
+	"sync"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -25,6 +26,7 @@ type attempt struct {
 type BasicAuthHandler struct {
 	userMap        map[string]string
 	attemptMap     map[string]*attempt
+	mutex          *sync.Mutex
 	realm          string
 	wrappedHandler http.Handler
 	rnd            *rand.Rand
@@ -37,6 +39,9 @@ func (handler BasicAuthHandler) writeUnauthorized(w http.ResponseWriter) {
 }
 
 func (handler BasicAuthHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	handler.mutex.Lock()
+	defer handler.mutex.Unlock()
+
 	sleepTime := handler.rnd.Intn(500000)
 
 	ip, _, err := net.SplitHostPort(r.RemoteAddr)
@@ -97,6 +102,7 @@ func NewBasicAuthHandler(realm string, userMap map[string]string, handler http.H
 	h.wrappedHandler = handler
 	h.userMap = userMap
 	h.attemptMap = make(map[string]*attempt)
-	h.rnd = rand.New(rand.NewSource(99))
+	h.rnd = rand.New(rand.NewSource(time.Now().Unix()))
+	h.mutex = &sync.Mutex{}
 	return h
 }
