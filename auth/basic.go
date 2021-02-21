@@ -57,7 +57,7 @@ func (handler BasicAuthHandler) ServeHTTP(w http.ResponseWriter, r *http.Request
 		handler.attemptMap[ip] = att
 	}
 
-	if att.numAttemtps >= 3 && att.timestamp.Add(5*time.Minute).After(time.Now()) {
+	if att.numAttemtps >= 25 && att.timestamp.Add(5*time.Minute).After(time.Now()) {
 		att.numAttemtps = 0
 		att.timestamp = time.Now()
 		time.Sleep(time.Duration(sleepTime) * time.Microsecond)
