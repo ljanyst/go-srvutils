@@ -34,13 +34,14 @@ func isProgramAvailable(name string) bool {
 }
 
 type Options struct {
-	ProjectPath  string
-	BuildProject bool
-	Assets       http.FileSystem
-	PackageName  string
-	BuildTags    string
-	VariableName string
-	Filename     string
+	ProjectPath     string
+	PostInstallHook func() error
+	BuildProject    bool
+	Assets          http.FileSystem
+	PackageName     string
+	BuildTags       string
+	VariableName    string
+	Filename        string
 }
 
 func GenerateNodeProject(opts Options) error {
@@ -96,6 +97,14 @@ func GenerateNodeProject(opts Options) error {
 	if err = cmd.Run(); err != nil {
 		output, _ := cmd.CombinedOutput()
 		return fmt.Errorf("Cannot install the JavaScript dependencies:\n%s", string(output))
+	}
+
+	// Run the post install hook
+	if opts.PostInstallHook != nil {
+		log.Info("Running the post install hook...")
+		if err := opts.PostInstallHook(); err != nil {
+			return fmt.Errorf("The post install hook failed: %s", err)
+		}
 	}
 
 	// Build the UI assets

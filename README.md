@@ -91,20 +91,27 @@ the resulting files into a binary. The `gen` package helps with that.
 package main
 
 import (
+	"fmt"
 	"github.com/ljanyst/go-srvutils/gen"
 	"github.com/ljanyst/webpass2/pkg/webpass2"
 	"log"
 )
 
 func main() {
+	hook := func() error {
+		fmt.Println("Hello World!")
+		return nil
+	}
+
 	err := gen.GenerateNodeProject(gen.Options{
-		ProjectPath:  "../../ui",
-		BuildProject: false,
-		Assets:       webpass2.Assets,
-		PackageName:  "webpass2",
-		BuildTags:    "!dev",
-		VariableName: "Assets",
-		Filename:     "assets_prod.go",
+		ProjectPath:     "../../ui",
+		PostInstallHook: hook,
+		BuildProject:    false,
+		Assets:          webpass2.Assets,
+		PackageName:     "webpass2",
+		BuildTags:       "!dev",
+		VariableName:    "Assets",
+		Filename:        "assets_prod.go",
 	})
 
 	if err != nil {
