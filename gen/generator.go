@@ -10,7 +10,6 @@ package gen
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
@@ -56,7 +55,7 @@ func GenerateNodeProject(opts Options) error {
 	// Check the validity of the project
 	jsonFile := filepath.Join(opts.ProjectPath, "package.json")
 	log.Infof("Reading project description from: %s", jsonFile)
-	data, err := ioutil.ReadFile(jsonFile)
+	data, err := os.ReadFile(jsonFile)
 	if err != nil {
 		return fmt.Errorf("Unable to read the configuration file: %v", err)
 	}
@@ -80,11 +79,7 @@ func GenerateNodeProject(opts Options) error {
 
 	// Clean up after previous builds
 	log.Info("Removing data of the previous build...")
-	if err = os.Remove(filepath.Join(opts.ProjectPath, "package-lock.json")); os.IsExist(err) {
-		return fmt.Errorf("Cannot remove package-lock.json: %s", err)
-	}
-
-	for _, dir := range []string{"build", "node_modules"} {
+	for _, dir := range []string{"dist", "node_modules"} {
 		if err = os.RemoveAll(filepath.Join(opts.ProjectPath, dir)); os.IsExist(err) {
 			return fmt.Errorf("Cannot remove %s: %s", dir, err)
 		}
